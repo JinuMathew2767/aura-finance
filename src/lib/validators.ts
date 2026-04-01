@@ -127,7 +127,7 @@ export const CreateMaintenanceSchema = z.object({
 export const UpdateMaintenanceSchema = CreateMaintenanceSchema.partial();
 
 // LOANS
-export const CreateLoanSchema = z.object({
+const LoanSchemaBase = z.object({
   vehicle_id: nullableUuidSchema,
   name: z.string().min(1),
   total_amount: z.number().min(0),
@@ -143,43 +143,72 @@ export const CreateLoanSchema = z.object({
   start_date: nullableStringSchema,
   end_date: nullableStringSchema,
   owner_type: OwnerTypeSchema,
-}).superRefine((value, ctx) => {
-  const totalRepayment = value.total_amount + (value.total_profit_amount ?? 0);
-  const splitPaid = (value.principal_paid_to_date ?? 0) + (value.profit_paid_to_date ?? 0);
-
-  if ((value.amount_paid_to_date ?? 0) > totalRepayment) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["amount_paid_to_date"],
-      message: "Paid to date cannot exceed finance amount plus total profit.",
-    });
-  }
-
-  if (splitPaid > (value.amount_paid_to_date ?? 0)) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["principal_paid_to_date"],
-      message: "Principal paid plus profit paid cannot exceed the total amount paid.",
-    });
-  }
-
-  if (value.auto_create_emi && !value.payment_account_id) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["payment_account_id"],
-      message: "Select the account to deduct EMI from.",
-    });
-  }
-
-  if (value.auto_create_emi && !value.next_payment_date) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["next_payment_date"],
-      message: "Set the next EMI date for auto-posting.",
-    });
-  }
 });
-export const UpdateLoanSchema = CreateLoanSchema.partial();
+
+function validateLoanShape(
+  value: {
+    total_amount?: number;
+    total_profit_amount?: number;
+    amount_paid_to_date?: number;
+    principal_paid_to_date?: number;
+    profit_paid_to_date?: number;
+    auto_create_emi?: boolean;
+    payment_account_id?: string | null;
+    next_payment_date?: string | null;
+  },
+  ctx: z.RefinementCtx
+) {
+  if (value.total_amount !== undefined && value.amount_paid_to_date !== undefined) {
+    const totalRepayment = value.total_amount + (value.total_profit_amount ?? 0);
+    if (value.amount_paid_to_date > totalRepayment) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["amount_paid_to_date"],
+        message: "Paid to date cannot exceed finance amount plus total profit.",
+      });
+    }
+  }
+
+  if (
+    value.amount_paid_to_date !== undefined &&
+    (value.principal_paid_to_date !== undefined || value.profit_paid_to_date !== undefined)
+  ) {
+    const splitPaid = (value.principal_paid_to_date ?? 0) + (value.profit_paid_to_date ?? 0);
+    if (splitPaid > value.amount_paid_to_date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["principal_paid_to_date"],
+        message: "Principal paid plus profit paid cannot exceed the total amount paid.",
+      });
+    }
+  }
+
+  if (value.auto_create_emi) {
+    if (!value.payment_account_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["payment_account_id"],
+        message: "Select the account to deduct EMI from.",
+      });
+    }
+
+    if (!value.next_payment_date) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["next_payment_date"],
+        message: "Set the next EMI date for auto-posting.",
+      });
+    }
+  }
+}
+
+export const CreateLoanSchema = LoanSchemaBase.superRefine((value, ctx) => {
+  validateLoanShape(value, ctx);
+});
+
+export const UpdateLoanSchema = LoanSchemaBase.partial().superRefine((value, ctx) => {
+  validateLoanShape(value, ctx);
+});
 
 // RECURRING RULES
 export const CreateRecurringRuleSchema = z.object({
