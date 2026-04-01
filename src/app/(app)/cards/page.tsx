@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type CardFormData = z.infer<typeof CreateCardSchema>;
+type CardFormData = z.input<typeof CreateCardSchema>;
 
 export default function Cards() {
   const [showForm, setShowForm] = React.useState(false);

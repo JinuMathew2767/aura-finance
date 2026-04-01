@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type LoanFormData = z.infer<typeof CreateLoanSchema>;
+type LoanFormData = z.input<typeof CreateLoanSchema>;
 
 export default function Loans() {
   const [showForm, setShowForm] = React.useState(false);

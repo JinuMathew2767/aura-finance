@@ -14,12 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type AccountFormData = z.infer<typeof CreateAccountSchema>;
+type AccountFormValues = z.input<typeof CreateAccountSchema>;
 
 export default function Accounts() {
   const [showForm, setShowForm] = React.useState(false);
   const { data, mutate } = useSWR("/api/accounts", fetcher);
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AccountFormData>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AccountFormValues>({
     resolver: zodResolver(CreateAccountSchema),
     defaultValues: {
       name: "",
@@ -29,7 +29,7 @@ export default function Accounts() {
     },
   });
 
-  const onSubmit = async (formData: AccountFormData) => {
+  const onSubmit = async (formData: AccountFormValues) => {
     try {
       await fetchWithBody("/api/accounts", "POST", formData);
       await mutate();
