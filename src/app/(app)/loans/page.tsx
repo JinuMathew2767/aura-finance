@@ -136,7 +136,7 @@ export default function Loans() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Active Loans</h1>
           <p className="text-sm mt-1 text-(--muted-foreground)">
-            Track financed amount, profit, paid-to-date, and automatic EMI expenses.
+            Track financed amount, statement values, and automatic EMI deductions from your chosen account.
           </p>
         </div>
         <Button type="button" className="gap-2" onClick={() => setShowForm((value) => !value)}>
@@ -240,7 +240,7 @@ export default function Loans() {
                 <div>
                   <h3 className="text-sm font-semibold text-(--foreground)">EMI Automation</h3>
                   <p className="text-xs text-(--muted-foreground)">
-                    When enabled, the app creates an expense on the EMI date and deducts it from the chosen account.
+                    When enabled, the app simply posts the EMI as an expense and deducts it from the chosen account balance.
                   </p>
                 </div>
 

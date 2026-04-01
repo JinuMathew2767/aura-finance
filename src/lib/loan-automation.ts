@@ -52,47 +52,6 @@ function isMissingLoanAutomationColumns(errorMessage: string) {
   ].some((column) => errorMessage.includes(column));
 }
 
-function splitInstallment(
-  installmentAmount: number,
-  principalRemaining: number,
-  profitRemaining: number
-) {
-  if (installmentAmount <= 0) {
-    return { principalComponent: 0, profitComponent: 0 };
-  }
-
-  if (principalRemaining <= 0) {
-    return { principalComponent: 0, profitComponent: roundMoney(Math.min(installmentAmount, profitRemaining)) };
-  }
-
-  if (profitRemaining <= 0) {
-    return { principalComponent: roundMoney(Math.min(installmentAmount, principalRemaining)), profitComponent: 0 };
-  }
-
-  const remainingTotal = principalRemaining + profitRemaining;
-  const rawProfit = roundMoney((installmentAmount * profitRemaining) / remainingTotal);
-  const profitComponent = roundMoney(Math.min(rawProfit, profitRemaining));
-  const principalComponent = roundMoney(Math.min(installmentAmount - profitComponent, principalRemaining));
-  const allocated = roundMoney(principalComponent + profitComponent);
-
-  if (allocated === installmentAmount) {
-    return { principalComponent, profitComponent };
-  }
-
-  const delta = roundMoney(installmentAmount - allocated);
-  if (principalRemaining - principalComponent >= delta) {
-    return {
-      principalComponent: roundMoney(principalComponent + delta),
-      profitComponent,
-    };
-  }
-
-  return {
-    principalComponent,
-    profitComponent: roundMoney(profitComponent + delta),
-  };
-}
-
 export async function processDueLoanInstallments() {
   const today = new Date().toISOString().slice(0, 10);
 
@@ -146,8 +105,6 @@ export async function processDueLoanInstallments() {
 
     let nextPaymentDate: string | null = loan.next_payment_date ?? null;
     let amountPaidToDate = Number(loan.amount_paid_to_date) || 0;
-    let principalPaidToDate = Number(loan.principal_paid_to_date) || 0;
-    let profitPaidToDate = Number(loan.profit_paid_to_date) || 0;
     const financeAmount = Number(loan.total_amount) || 0;
     const totalProfitAmount = Number(loan.total_profit_amount) || 0;
     const scheduledInstallment = Number(loan.monthly_payment) || 0;
@@ -180,14 +137,6 @@ export async function processDueLoanInstallments() {
       }
 
       const installmentAmount = roundMoney(Math.min(scheduledInstallment, remainingTotal));
-      const principalRemaining = roundMoney(financeAmount - principalPaidToDate);
-      const profitRemaining = roundMoney(totalProfitAmount - profitPaidToDate);
-      const { principalComponent, profitComponent } = splitInstallment(
-        installmentAmount,
-        Math.max(principalRemaining, 0),
-        Math.max(profitRemaining, 0)
-      );
-
       const { data: transaction, error: transactionError } = await supabaseServerAdmin
         .from("transactions")
         .insert([
@@ -218,8 +167,8 @@ export async function processDueLoanInstallments() {
         {
           loan_id: loan.id,
           transaction_id: transaction.id,
-          principal_amount: principalComponent,
-          interest_amount: profitComponent,
+          principal_amount: installmentAmount,
+          interest_amount: 0,
           payment_date: nextPaymentDate,
           auto_created: true,
         },
@@ -238,8 +187,6 @@ export async function processDueLoanInstallments() {
       }
 
       amountPaidToDate = roundMoney(amountPaidToDate + installmentAmount);
-      principalPaidToDate = roundMoney(principalPaidToDate + principalComponent);
-      profitPaidToDate = roundMoney(profitPaidToDate + profitComponent);
       nextPaymentDate = addOneMonth(nextPaymentDate);
       processed += 1;
       didChange = true;
@@ -254,8 +201,6 @@ export async function processDueLoanInstallments() {
       .from("loans")
       .update({
         amount_paid_to_date: amountPaidToDate,
-        principal_paid_to_date: principalPaidToDate,
-        profit_paid_to_date: profitPaidToDate,
         next_payment_date: shouldKeepAuto ? nextPaymentDate : null,
         auto_create_emi: shouldKeepAuto,
       })

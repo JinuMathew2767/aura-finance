@@ -135,16 +135,16 @@ export default function LoanDetail({ params }: { params: Promise<{ id: string }>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-(--border) p-4 bg-(--background)">
-              <div className="flex items-center gap-2 text-sm font-semibold text-(--foreground) mb-1">
-                <Wallet size={16} />
-                Payment Account
-              </div>
-              <div className="text-lg font-bold">{paymentAccount?.name || "Not selected"}</div>
-              <div className="text-xs text-(--muted-foreground) mt-1">
-                EMI will reduce this account balance when auto-posted.
-              </div>
+          <div className="rounded-2xl border border-(--border) p-4 bg-(--background)">
+            <div className="flex items-center gap-2 text-sm font-semibold text-(--foreground) mb-1">
+              <Wallet size={16} />
+              Payment Account
             </div>
+            <div className="text-lg font-bold">{paymentAccount?.name || "Not selected"}</div>
+            <div className="text-xs text-(--muted-foreground) mt-1">
+              EMI will reduce this account balance when auto-posted.
+            </div>
+          </div>
 
             <div className="rounded-2xl border border-(--border) p-4 bg-(--background)">
               <div className="flex items-center gap-2 text-sm font-semibold text-(--foreground) mb-1">
@@ -179,9 +179,15 @@ export default function LoanDetail({ params }: { params: Promise<{ id: string }>
                   <div key={payment.id} className="flex justify-between items-center p-5 hover:bg-(--muted)/30 transition-colors">
                     <div>
                       <div className="font-semibold text-base mb-1">{formatDate(payment.payment_date)}</div>
-                      <div className="text-sm font-medium text-(--muted-foreground)">
-                        Principal: {formatCurrency(principal)} • Profit: {formatCurrency(interest)}
-                      </div>
+                      {payment.auto_created ? (
+                        <div className="text-sm font-medium text-(--muted-foreground)">
+                          EMI deducted from account balance: {formatCurrency(principal + interest)}
+                        </div>
+                      ) : (
+                        <div className="text-sm font-medium text-(--muted-foreground)">
+                          Principal: {formatCurrency(principal)} • Profit: {formatCurrency(interest)}
+                        </div>
+                      )}
                       {payment.auto_created && (
                         <div className="text-xs mt-2 inline-flex px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600">
                           Auto-created EMI
