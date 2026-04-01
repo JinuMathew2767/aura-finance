@@ -1,26 +1,102 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f2f2f7; /* iOS dark/light backgrounds */
+  --foreground: #1c1c1e;
+  
+  --card: #ffffff;
+  --card-foreground: #1c1c1e;
+  
+  --primary: #007aff; /* Apple Blue */
+  --primary-foreground: #ffffff;
+  
+  --secondary: #e5e5ea;
+  --secondary-foreground: #1c1c1e;
+
+  --destructive: #ff3b30;
+  --destructive-foreground: #ffffff;
+  
+  --success: #34c759;
+  --success-foreground: #ffffff;
+
+  --muted: #f2f2f7;
+  --muted-foreground: #8e8e93;
+
+  --border: #e5e5ea;
+  --input: #e5e5ea;
+  --ring: #007aff;
+
+  --radius: 0.75rem; /* Smoother apple radius */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #000000;
+    --foreground: #f2f2f7;
+    
+    --card: #1c1c1e;
+    --card-foreground: #f2f2f7;
+    
+    --primary: #0a84ff;
+    --primary-foreground: #ffffff;
+    
+    --secondary: #2c2c2e;
+    --secondary-foreground: #f2f2f7;
+
+    --destructive: #ff453a;
+    --destructive-foreground: #ffffff;
+    
+    --success: #32d74b;
+    --success-foreground: #ffffff;
+
+    --muted: #1c1c1e;
+    --muted-foreground: #aeaeb2;
+
+    --border: #3a3a3c;
+    --input: #3a3a3c;
+    --ring: #0a84ff;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism helpers */
+.glass {
+  background: rgba(var(--card), 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.glass-dark {
+  background: rgba(28, 28, 30, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
