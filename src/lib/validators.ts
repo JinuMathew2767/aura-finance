@@ -11,6 +11,38 @@ export const FrequencySchema = z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']);
 export const NotificationTypeSchema = z.enum(['IN_APP', 'WHATSAPP', 'BOTH']);
 export const ExportTypeSchema = z.enum(['PDF', 'EXCEL', 'WORD']);
 
+const emptyToUndefined = (value: unknown) => {
+  if (value === '' || value === null || value === undefined) return undefined;
+  if (typeof value === 'number' && Number.isNaN(value)) return undefined;
+  return value;
+};
+
+const emptyToNull = (value: unknown) => {
+  if (value === '' || value === undefined) return null;
+  if (typeof value === 'number' && Number.isNaN(value)) return null;
+  return value;
+};
+
+const nullableUuidSchema = z.preprocess(
+  emptyToNull,
+  z.string().uuid().nullable().optional()
+);
+
+const nullableStringSchema = z.preprocess(
+  emptyToNull,
+  z.string().nullable().optional()
+);
+
+const nullableUrlSchema = z.preprocess(
+  emptyToNull,
+  z.string().url().nullable().optional()
+);
+
+const optionalNonNegativeNumberSchema = z.preprocess(
+  emptyToUndefined,
+  z.number().min(0).optional()
+);
+
 const DateTimeInputSchema = z
   .string()
   .min(1)
@@ -23,7 +55,7 @@ const DateTimeInputSchema = z
 export const CreateAccountSchema = z.object({
   name: z.string().min(1),
   type: AccountTypeSchema,
-  current_balance: z.number().optional().default(0),
+  current_balance: z.preprocess(emptyToUndefined, z.number().optional().default(0)),
   owner_type: OwnerTypeSchema,
 });
 export const UpdateAccountSchema = CreateAccountSchema.partial();
@@ -32,10 +64,10 @@ export const UpdateAccountSchema = CreateAccountSchema.partial();
 export const CreateCardSchema = z.object({
   name: z.string().min(1),
   type: CardTypeSchema,
-  linked_account_id: z.string().uuid().optional().nullable(),
-  credit_limit: z.number().min(0).optional().default(0),
-  statement_day: z.number().min(1).max(31).optional().nullable(),
-  due_day: z.number().min(1).max(31).optional().nullable(),
+  linked_account_id: nullableUuidSchema,
+  credit_limit: z.preprocess(emptyToUndefined, z.number().min(0).optional().default(0)),
+  statement_day: z.preprocess(emptyToNull, z.number().min(1).max(31).nullable().optional()),
+  due_day: z.preprocess(emptyToNull, z.number().min(1).max(31).nullable().optional()),
   owner_type: OwnerTypeSchema,
 });
 export const UpdateCardSchema = CreateCardSchema.partial();
@@ -44,18 +76,18 @@ export const UpdateCardSchema = CreateCardSchema.partial();
 export const CreateTransactionSchema = z.object({
   transaction_type: TransactionTypeSchema,
   title: z.string().min(1),
-  description: z.string().optional().nullable(),
+  description: nullableStringSchema,
   amount: z.number().min(0.01),
   transaction_date: DateTimeInputSchema,
-  category_id: z.string().uuid().optional().nullable(),
-  subcategory_id: z.string().uuid().optional().nullable(),
+  category_id: nullableUuidSchema,
+  subcategory_id: nullableUuidSchema,
   payment_method: PaymentMethodSchema.optional().nullable(),
-  account_id: z.string().uuid().optional().nullable(),
-  card_id: z.string().uuid().optional().nullable(),
+  account_id: nullableUuidSchema,
+  card_id: nullableUuidSchema,
   owner_type: OwnerTypeSchema,
   is_recurring: z.boolean().optional().default(false),
-  receipt_url: z.string().url().optional().nullable(),
-  related_transaction_id: z.string().uuid().optional().nullable()
+  receipt_url: nullableUrlSchema,
+  related_transaction_id: nullableUuidSchema
 });
 export const UpdateTransactionSchema = CreateTransactionSchema.partial();
 
@@ -78,8 +110,8 @@ export const UpdateBudgetSchema = CreateBudgetSchema.partial();
 export const CreateVehicleSchema = z.object({
   make: z.string().min(1),
   model: z.string().min(1),
-  year: z.number().optional().nullable(),
-  license_plate: z.string().optional().nullable(),
+  year: z.preprocess(emptyToNull, z.number().nullable().optional()),
+  license_plate: nullableStringSchema,
   owner_type: OwnerTypeSchema,
 });
 export const UpdateVehicleSchema = CreateVehicleSchema.partial();
@@ -87,22 +119,22 @@ export const UpdateVehicleSchema = CreateVehicleSchema.partial();
 // VEHICLE MAINTENANCE
 export const CreateMaintenanceSchema = z.object({
   description: z.string().min(1),
-  cost: z.number().min(0).optional(),
+  cost: optionalNonNegativeNumberSchema,
   service_date: z.string(),
-  next_service_date: z.string().optional().nullable(),
+  next_service_date: nullableStringSchema,
   reminder_sent: z.boolean().optional().default(false),
 });
 export const UpdateMaintenanceSchema = CreateMaintenanceSchema.partial();
 
 // LOANS
 export const CreateLoanSchema = z.object({
-  vehicle_id: z.string().uuid().optional().nullable(),
+  vehicle_id: nullableUuidSchema,
   name: z.string().min(1),
   total_amount: z.number().min(0),
-  interest_rate: z.number().min(0).optional(),
+  interest_rate: optionalNonNegativeNumberSchema,
   monthly_payment: z.number().min(0),
-  start_date: z.string().optional().nullable(),
-  end_date: z.string().optional().nullable(),
+  start_date: nullableStringSchema,
+  end_date: nullableStringSchema,
   owner_type: OwnerTypeSchema,
 });
 export const UpdateLoanSchema = CreateLoanSchema.partial();
@@ -114,7 +146,7 @@ export const CreateRecurringRuleSchema = z.object({
   frequency: FrequencySchema,
   interval_count: z.number().min(1).optional().default(1),
   start_date: z.string(),
-  end_date: z.string().optional().nullable(),
+  end_date: nullableStringSchema,
   next_run_date: z.string(),
   auto_create: z.boolean().optional().default(false),
   reminder_days_before: z.number().optional().default(0),

@@ -4,7 +4,7 @@ import useSWR from "swr";
 import { fetchWithBody, fetcher } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CreateCardSchema } from "@/lib/validators";
 import { Spinner } from "@/components/ui/spinner";
@@ -14,13 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type CardFormData = z.input<typeof CreateCardSchema>;
+type CardFormValues = z.input<typeof CreateCardSchema>;
+type CardFormData = z.output<typeof CreateCardSchema>;
 
 export default function Cards() {
   const [showForm, setShowForm] = React.useState(false);
   const { data, mutate } = useSWR("/api/cards", fetcher);
   const { data: accounts } = useSWR("/api/accounts", fetcher);
-  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } = useForm<CardFormData>({
+  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } = useForm<CardFormValues, unknown, CardFormData>({
     resolver: zodResolver(CreateCardSchema),
     defaultValues: {
       name: "",
@@ -61,6 +62,16 @@ export default function Cards() {
     }
   };
 
+  const onInvalid = (formErrors: FieldErrors<CardFormValues>) => {
+    const firstError = Object.values(formErrors)[0];
+    const message =
+      firstError && typeof firstError === "object" && "message" in firstError && typeof firstError.message === "string"
+        ? firstError.message
+        : "Please review the highlighted fields.";
+
+    alert(message);
+  };
+
   return (
     <div className="space-y-6 animate-in">
       <div className="flex items-end justify-between gap-4">
@@ -89,7 +100,7 @@ export default function Cards() {
             </Button>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Card Name</Label>
@@ -125,6 +136,7 @@ export default function Cards() {
                       <option key={account.id} value={account.id}>{account.name}</option>
                     ))}
                   </select>
+                  {errors.linked_account_id && <p className="text-sm text-(--destructive)">{errors.linked_account_id.message}</p>}
                 </div>
               ) : (
                 <div className="space-y-2">

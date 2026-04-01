@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateTransactionSchema } from "@/lib/validators";
 import { z } from "zod";
@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import useSWR from 'swr';
 
-type FormData = z.infer<typeof CreateTransactionSchema>;
+type FormValues = z.input<typeof CreateTransactionSchema>;
+type FormData = z.output<typeof CreateTransactionSchema>;
 
 function getLocalDateTimeValue() {
   const now = new Date();
@@ -26,7 +27,7 @@ export default function NewTransaction() {
   const { data: accounts } = useSWR("/api/accounts", fetcher);
   const { data: cards } = useSWR("/api/cards", fetcher);
   
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<FormValues, unknown, FormData>({
     resolver: zodResolver(CreateTransactionSchema),
     defaultValues: {
       transaction_date: getLocalDateTimeValue(),
@@ -89,13 +90,23 @@ export default function NewTransaction() {
     }
   };
 
+  const onInvalid = (formErrors: FieldErrors<FormValues>) => {
+    const firstError = Object.values(formErrors)[0];
+    const message =
+      firstError && typeof firstError === "object" && "message" in firstError && typeof firstError.message === "string"
+        ? firstError.message
+        : "Please review the highlighted fields.";
+
+    alert(message);
+  };
+
   return (
     <div className="max-w-xl mx-auto space-y-6">
        <h1 className="text-3xl font-bold tracking-tight">Add Transaction</h1>
        
        <Card className="border-(--border) shadow-md overflow-hidden glass">
          <CardContent className="p-6">
-           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+           <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
              
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                <div className="space-y-2">
@@ -163,6 +174,7 @@ export default function NewTransaction() {
                    <option value="">Select Account...</option>
                    {accounts?.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
                  </select>
+                 {errors.account_id && <p className="text-sm text-(--destructive)">{errors.account_id.message}</p>}
                </div>
              )}
 
@@ -175,12 +187,14 @@ export default function NewTransaction() {
                      <option key={card.id} value={card.id}>{card.name}</option>
                    ))}
                  </select>
+                 {errors.card_id && <p className="text-sm text-(--destructive)">{errors.card_id.message}</p>}
                </div>
              )}
 
              <div className="space-y-2">
                <Label>Date</Label>
                <Input type="datetime-local" {...register("transaction_date")} className="bg-(--card)" />
+               {errors.transaction_date && <p className="text-sm text-(--destructive)">{errors.transaction_date.message}</p>}
              </div>
              
              <Button type="submit" disabled={isSubmitting} className="w-full mt-6 h-12 text-base shadow-md">

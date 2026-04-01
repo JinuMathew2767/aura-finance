@@ -4,7 +4,7 @@ import useSWR from "swr";
 import { fetchWithBody, fetcher } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CreateAccountSchema } from "@/lib/validators";
 import { Spinner } from "@/components/ui/spinner";
@@ -15,11 +15,12 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 type AccountFormValues = z.input<typeof CreateAccountSchema>;
+type AccountFormData = z.output<typeof CreateAccountSchema>;
 
 export default function Accounts() {
   const [showForm, setShowForm] = React.useState(false);
   const { data, mutate } = useSWR("/api/accounts", fetcher);
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AccountFormValues>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<AccountFormValues, unknown, AccountFormData>({
     resolver: zodResolver(CreateAccountSchema),
     defaultValues: {
       name: "",
@@ -29,7 +30,7 @@ export default function Accounts() {
     },
   });
 
-  const onSubmit = async (formData: AccountFormValues) => {
+  const onSubmit = async (formData: AccountFormData) => {
     try {
       await fetchWithBody("/api/accounts", "POST", formData);
       await mutate();
@@ -43,6 +44,16 @@ export default function Accounts() {
     } catch (err: any) {
       alert("Error: " + err.message);
     }
+  };
+
+  const onInvalid = (formErrors: FieldErrors<AccountFormValues>) => {
+    const firstError = Object.values(formErrors)[0];
+    const message =
+      firstError && typeof firstError === "object" && "message" in firstError && typeof firstError.message === "string"
+        ? firstError.message
+        : "Please review the highlighted fields.";
+
+    alert(message);
   };
 
   return (
@@ -73,7 +84,7 @@ export default function Accounts() {
             </Button>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Account Name</Label>

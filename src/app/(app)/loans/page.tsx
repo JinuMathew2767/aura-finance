@@ -4,7 +4,7 @@ import useSWR from "swr";
 import { fetchWithBody, fetcher } from "@/lib/api-client";
 import { formatCurrency } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 import { CreateLoanSchema } from "@/lib/validators";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -15,12 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
-type LoanFormData = z.input<typeof CreateLoanSchema>;
+type LoanFormValues = z.input<typeof CreateLoanSchema>;
+type LoanFormData = z.output<typeof CreateLoanSchema>;
 
 export default function Loans() {
   const [showForm, setShowForm] = React.useState(false);
   const { data: loans, mutate } = useSWR("/api/loans", fetcher);
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<LoanFormData>({
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<LoanFormValues, unknown, LoanFormData>({
     resolver: zodResolver(CreateLoanSchema),
     defaultValues: {
       vehicle_id: null,
@@ -61,6 +62,16 @@ export default function Loans() {
     }
   };
 
+  const onInvalid = (formErrors: FieldErrors<LoanFormValues>) => {
+    const firstError = Object.values(formErrors)[0];
+    const message =
+      firstError && typeof firstError === "object" && "message" in firstError && typeof firstError.message === "string"
+        ? firstError.message
+        : "Please review the highlighted fields.";
+
+    alert(message);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in">
       <div className="flex items-end justify-between gap-4">
@@ -84,7 +95,7 @@ export default function Loans() {
             </Button>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Loan Name</Label>
