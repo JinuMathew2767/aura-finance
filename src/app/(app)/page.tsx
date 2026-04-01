@@ -17,7 +17,6 @@ export default function Dashboard() {
 
   if (loading && !aErr) return <div className="flex h-64 items-center justify-center"><Spinner /></div>;
 
-  const totalBalances = accounts?.reduce((acc: number, item: any) => acc + (Number(item.current_balance) || 0), 0) || 0;
   const totalOutstandings = cards?.filter((c: any) => c.type === 'CREDIT').reduce((acc: number, item: any) => acc + (Number(item.outstanding_balance) || 0), 0) || 0;
 
   return (
@@ -36,29 +35,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger-children">
-        {/* Total Balance */}
-        <div className="card-glow-green rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div
-                className="h-9 w-9 rounded-lg flex items-center justify-center"
-                style={{ background: 'rgba(16,185,129,0.15)' }}
-              >
-                <Wallet size={18} style={{ color: 'var(--success)' }} />
-              </div>
-              <span className="text-sm font-semibold" style={{ color: 'var(--success)' }}>Total Balance</span>
-            </div>
-            <TrendingUp size={16} style={{ color: 'var(--success)' }} className="opacity-60" />
-          </div>
-          <div className="text-3xl font-bold tracking-tight" style={{ color: 'var(--foreground)' }}>
-            {formatCurrency(totalBalances)}
-          </div>
-          <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
-            Across {accounts?.length || 0} accounts
-          </p>
-        </div>
-
+      <div className="grid grid-cols-1 gap-4 stagger-children">
         {/* Outstanding Credit */}
         <div className="card-glow-red rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">

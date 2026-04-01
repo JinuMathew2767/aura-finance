@@ -14,14 +14,22 @@ import useSWR from 'swr';
 
 type FormData = z.infer<typeof CreateTransactionSchema>;
 
+function getLocalDateTimeValue() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  const local = new Date(now.getTime() - offset * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 export default function NewTransaction() {
   const router = useRouter();
   const { data: accounts } = useSWR("/api/accounts", fetcher);
+  const { data: cards } = useSWR("/api/cards", fetcher);
   
   const { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(CreateTransactionSchema),
     defaultValues: {
-      transaction_date: new Date().toISOString(),
+      transaction_date: getLocalDateTimeValue(),
       owner_type: "SHARED",
       transaction_type: "EXPENSE",
       payment_method: "BANK",
@@ -33,21 +41,45 @@ export default function NewTransaction() {
 
   const watchType = watch("transaction_type");
   const watchCategory = watch("category_id");
+  const watchPaymentMethod = watch("payment_method");
+  const watchAccountId = watch("account_id");
+  const watchCardId = watch("card_id");
+  const selectedAccount = accounts?.find((account: any) => account.id === watchAccountId);
+  const selectedCard = cards?.find((card: any) => card.id === watchCardId);
+  const isExpense = watchType === "EXPENSE";
+  const isIncome = watchType === "INCOME";
+  const isCardPayment = watchType === "CC_PAYMENT";
+  const showCategory = isExpense;
+  const showPaymentMethod = isExpense;
+  const showAccountSelector = isIncome || isCardPayment || (isExpense && (watchPaymentMethod === "BANK" || watchPaymentMethod === "CASH"));
+  const showCardSelector = isCardPayment || (isExpense && (watchPaymentMethod === "DEBIT_CARD" || watchPaymentMethod === "CREDIT_CARD"));
+  const availableCards = isCardPayment
+    ? cards?.filter((card: any) => card.type === "CREDIT")
+    : isExpense && watchPaymentMethod === "CREDIT_CARD"
+      ? cards?.filter((card: any) => card.type === "CREDIT")
+      : isExpense && watchPaymentMethod === "DEBIT_CARD"
+        ? cards?.filter((card: any) => card.type === "DEBIT")
+        : [];
 
   // Fetch Categories & dynamically filter Subcategories based on selection
   const { data: categories } = useSWR("/api/categories", fetcher);
-  const { data: subcategories } = useSWR(watchCategory ? `/api/subcategories?category_id=${watchCategory}` : null, fetcher);
+  const { data: subcategories } = useSWR(showCategory && watchCategory ? `/api/subcategories?category_id=${watchCategory}` : null, fetcher);
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Cleanup empty strings into nulls securely for the backend
+      const ownerType =
+        selectedCard?.owner_type ||
+        selectedAccount?.owner_type ||
+        "SHARED";
+
       const payload = {
          ...data,
-         category_id: data.category_id || null,
-         subcategory_id: data.subcategory_id || null,
-         account_id: data.account_id || null,
-         card_id: data.card_id || null,
-         payment_method: data.payment_method || null
+         owner_type: ownerType,
+         category_id: showCategory ? data.category_id || null : null,
+         subcategory_id: showCategory ? data.subcategory_id || null : null,
+         account_id: showAccountSelector ? data.account_id || null : null,
+         card_id: showCardSelector ? data.card_id || null : null,
+         payment_method: showPaymentMethod ? data.payment_method || null : null
       };
 
       await fetchWithBody("/api/transactions", "POST", payload);
@@ -66,32 +98,26 @@ export default function NewTransaction() {
            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
              
              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-               {/* Type & Payment Method */}
                <div className="space-y-2">
                  <Label>Type</Label>
                  <select {...register("transaction_type")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
                    <option value="EXPENSE">Expense</option>
                    <option value="INCOME">Income</option>
-                   <option value="TRANSFER">Transfer</option>
                    <option value="CC_PAYMENT">CC Payment</option>
                  </select>
                </div>
                
-               <div className="space-y-2">
-                 <Label>Payment Method</Label>
-                 <select {...register("payment_method")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
-                   {watchType !== "CC_PAYMENT" ? (
-                     <optgroup label="Select Method">
-                      <option value="BANK">Bank</option>
-                      <option value="DEBIT_CARD">Debit Card</option>
-                      <option value="CREDIT_CARD">Credit Card</option>
-                      <option value="CASH">Cash</option>
-                     </optgroup>
-                   ) : (
-                     <option value="">None (NULL)</option>
-                   )}
-                 </select>
-               </div>
+               {showPaymentMethod && (
+                 <div className="space-y-2">
+                   <Label>Payment Method</Label>
+                   <select {...register("payment_method")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
+                    <option value="BANK">Bank</option>
+                    <option value="DEBIT_CARD">Debit Card</option>
+                    <option value="CREDIT_CARD">Credit Card</option>
+                    <option value="CASH">Cash</option>
+                   </select>
+                 </div>
+               )}
              </div>
 
              <div className="space-y-2">
@@ -106,50 +132,55 @@ export default function NewTransaction() {
                {errors.amount && <p className="text-sm text-(--destructive)">{errors.amount.message}</p>}
              </div>
              
-             {/* Dynamic Category Group */}
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <select {...register("category_id")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
-                    <option value="">Select Category...</option>
-                    {categories?.filter((c: any) => c.type === watchType).map((c: any) => (
-                       <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
+             {showCategory && (
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <select {...register("category_id")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
+                      <option value="">Select Category...</option>
+                      {categories?.filter((c: any) => c.type === watchType).map((c: any) => (
+                         <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Subcategory (Optional)</Label>
-                  <select {...register("subcategory_id")} disabled={!watchCategory} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring) disabled:opacity-50">
-                    <option value="">Select Subcategory...</option>
-                    {subcategories?.map((sc: any) => (
-                       <option key={sc.id} value={sc.id}>{sc.name}</option>
-                    ))}
-                  </select>
-                </div>
-             </div>
-             
-             <div className="space-y-2">
-               <Label>Account</Label>
-               <select {...register("account_id")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
-                 <option value="">Select Account...</option>
-                 {accounts?.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.owner_type})</option>)}
-               </select>
-             </div>
+                  <div className="space-y-2">
+                    <Label>Subcategory (Optional)</Label>
+                    <select {...register("subcategory_id")} disabled={!watchCategory} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring) disabled:opacity-50">
+                      <option value="">Select Subcategory...</option>
+                      {subcategories?.map((sc: any) => (
+                         <option key={sc.id} value={sc.id}>{sc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+               </div>
+             )}
 
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+             {showAccountSelector && (
                <div className="space-y-2">
-                 <Label>Owner</Label>
-                 <select {...register("owner_type")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
-                    <option value="SHARED">Shared</option>
-                    <option value="SELF">Self</option>
-                    <option value="SPOUSE">Spouse</option>
+                 <Label>{isCardPayment ? "Pay From Account" : isIncome ? "Deposit To Account" : "Account"}</Label>
+                 <select {...register("account_id")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
+                   <option value="">Select Account...</option>
+                   {accounts?.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
                  </select>
                </div>
+             )}
+
+             {showCardSelector && (
                <div className="space-y-2">
-                 <Label>Date</Label>
-                 <Input type="datetime-local" {...register("transaction_date")} className="bg-(--card)" />
+                 <Label>{isCardPayment ? "Credit Card" : "Card"}</Label>
+                 <select {...register("card_id")} className="flex h-11 w-full rounded-xl border border-(--border) bg-(--card) px-3 outline-none focus-visible:ring-1 focus-visible:ring-(--ring)">
+                   <option value="">Select Card...</option>
+                   {availableCards?.map((card: any) => (
+                     <option key={card.id} value={card.id}>{card.name}</option>
+                   ))}
+                 </select>
                </div>
+             )}
+
+             <div className="space-y-2">
+               <Label>Date</Label>
+               <Input type="datetime-local" {...register("transaction_date")} className="bg-(--card)" />
              </div>
              
              <Button type="submit" disabled={isSubmitting} className="w-full mt-6 h-12 text-base shadow-md">

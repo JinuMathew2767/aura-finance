@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { clearAuthUserId, getAuthUserId } from "@/lib/api-client";
@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api-client";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Home },
@@ -32,7 +32,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const userId = getAuthUserId();
+
+  const userId = useSyncExternalStore(
+    () => () => {},
+    getAuthUserId,
+    () => null
+  );
 
   const { data: notifications } = useSWR('/api/notifications', fetcher);
   const unreadCount = notifications?.filter((n: { is_read?: boolean }) => !n.is_read)?.length || 0;
