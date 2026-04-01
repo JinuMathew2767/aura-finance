@@ -147,7 +147,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* ── Main Content ── */}
       <main className="flex-1 md:pl-64 min-w-0 flex flex-col">
         {/* Mobile top header */}
-        <header className="md:hidden sticky top-0 z-40 flex h-14 items-center justify-between px-4 glass-sidebar">
+        <header
+          className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 glass-sidebar"
+          style={{
+            paddingTop: "env(safe-area-inset-top)",
+            minHeight: "calc(3.5rem + env(safe-area-inset-top))",
+          }}
+        >
           <div className="font-bold tracking-tight text-sm flex items-center gap-2">
             <div
               className="h-7 w-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold"
