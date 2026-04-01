@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { setAuthUserId } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
 import { User, Users, ArrowRight, Sparkles } from "lucide-react";
 
 const JINU_ID = "11111111-1111-1111-1111-111111111111";
@@ -11,16 +9,11 @@ const WIFE_ID = "22222222-2222-2222-2222-222222222222";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
 
   const handleLogin = (id: string) => {
     setAuthUserId(id);
     router.push("/");
   };
-
-  if (!mounted) return null;
 
   return (
     <div

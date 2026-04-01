@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { getAuthUserId } from "@/lib/api-client";
+import { clearAuthUserId, getAuthUserId } from "@/lib/api-client";
 import {
   Home, Wallet, CreditCard, ListOrdered, PlusCircle, LogOut,
   PieChart, Landmark, Car, Bell, FileText, Download, Phone,
@@ -31,20 +31,19 @@ const navItems = [
 export function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
+  const userId = getAuthUserId();
 
   const { data: notifications } = useSWR('/api/notifications', fetcher);
-  const unreadCount = notifications?.filter((n: any) => !n.is_read)?.length || 0;
+  const unreadCount = notifications?.filter((n: { is_read?: boolean }) => !n.is_read)?.length || 0;
 
   useEffect(() => {
-    setMounted(true);
-    if (!getAuthUserId()) {
+    if (!userId) {
       router.push("/login");
     }
-  }, [router]);
+  }, [router, userId]);
 
-  if (!mounted || !getAuthUserId()) return null;
+  if (!userId) return null;
 
   return (
     <div className="flex min-h-screen md:pb-0" style={{ background: 'var(--background)' }}>
@@ -132,7 +131,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           {/* Sign Out */}
           <button
-            onClick={() => { localStorage.clear(); router.push('/login'); }}
+            onClick={() => {
+              clearAuthUserId();
+              router.push('/login');
+            }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-red-500/10 hover:text-red-500"
             style={{ color: 'var(--muted-foreground)' }}
           >
