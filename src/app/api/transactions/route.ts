@@ -45,10 +45,21 @@ export async function POST(req: NextRequest) {
     const userId = requireUserId(req);
     const body = await req.json();
     const validatedData = CreateTransactionSchema.parse(body);
+    let createdByUserId: string | null = null;
+
+    const { data: existingUser } = await supabaseServerAdmin
+      .from("users")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (existingUser?.id) {
+      createdByUserId = existingUser.id;
+    }
 
     const { data, error } = await supabaseServerAdmin
       .from("transactions")
-      .insert([{ ...validatedData, created_by_user_id: userId }])
+      .insert([{ ...validatedData, created_by_user_id: createdByUserId }])
       .select()
       .single();
 
