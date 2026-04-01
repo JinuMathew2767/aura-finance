@@ -155,13 +155,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
             >AF</div>
             Aura Finance
           </div>
-          <Link
-            href="/transactions/new"
-            className="h-8 w-8 rounded-full flex items-center justify-center text-white shadow-md"
-            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)' }}
-          >
-            <PlusCircle size={16} />
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="h-8 w-8 rounded-full flex items-center justify-center shadow-md"
+              style={{ color: 'var(--foreground)', background: 'var(--card)' }}
+            >
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <Link
+              href="/transactions/new"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-white shadow-md"
+              style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)' }}
+            >
+              <PlusCircle size={16} />
+            </Link>
+          </div>
         </header>
 
         <div className="flex-1 p-4 pb-28 md:p-8 max-w-5xl mx-auto w-full">
