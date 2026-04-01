@@ -4,10 +4,15 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { getAuthUserId } from "@/lib/api-client";
-import { Home, Wallet, CreditCard, ListOrdered, PlusCircle, LogOut, PieChart, Landmark, Car, Bell, FileText, Download, Phone } from "lucide-react";
+import {
+  Home, Wallet, CreditCard, ListOrdered, PlusCircle, LogOut,
+  PieChart, Landmark, Car, Bell, FileText, Download, Phone,
+  Sun, Moon, ChevronRight
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api-client";
+import { useTheme } from "next-themes";
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: Home },
@@ -27,6 +32,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const { data: notifications } = useSWR('/api/notifications', fetcher);
   const unreadCount = notifications?.filter((n: any) => !n.is_read)?.length || 0;
@@ -41,99 +47,151 @@ export function Shell({ children }: { children: React.ReactNode }) {
   if (!mounted || !getAuthUserId()) return null;
 
   return (
-    <div className="flex bg-(--background) min-h-screen pb-20 md:pb-0">
-      {/* Sidebar for Desktop */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-(--border) bg-(--card) fixed h-full glass-dark z-50">
-        <div className="p-6 md:p-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-(--primary) rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-md">
-              AF
-            </div>
-            <span className="font-bold tracking-tight text-(--foreground) text-xl">Aura</span>
+    <div className="flex min-h-screen md:pb-0" style={{ background: 'var(--background)' }}>
+
+      {/* ── Sidebar Desktop ── */}
+      <aside className="hidden md:flex w-64 flex-col fixed h-full z-50 glass-sidebar">
+
+        {/* Logo */}
+        <div className="px-6 py-7 flex items-center gap-3">
+          <div
+            className="h-9 w-9 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-lg flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)' }}
+          >
+            AF
+          </div>
+          <div>
+            <span className="font-bold tracking-tight text-base" style={{ color: 'var(--foreground)' }}>Aura</span>
+            <span className="block text-[10px] font-medium" style={{ color: 'var(--muted-foreground)' }}>Finance</span>
           </div>
         </div>
 
-        <nav className="flex flex-col gap-2 px-4 flex-1 overflow-y-auto no-scrollbar pb-6 shadow-inner ring-1 ring-inset ring-transparent">
-          {navItems.map((item) => {
+        {/* Nav divider */}
+        <div className="divider mx-4 mb-3" />
+
+        {/* Nav items */}
+        <nav className="flex flex-col gap-1 px-3 flex-1 overflow-y-auto no-scrollbar pb-4">
+          {navItems.map((item, i) => {
             const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                style={{ animationDelay: `${i * 30}ms` }}
                 className={cn(
-                  "flex items-center justify-between px-4 py-3 rounded-xl font-medium transition-colors duration-200",
-                  isActive 
-                    ? "bg-(--primary) text-(--primary-foreground) shadow-md"
-                    : "text-(--muted-foreground) hover:bg-(--secondary) hover:text-(--foreground)"
+                  "animate-slide-left flex items-center justify-between px-3 py-2.5 rounded-xl font-medium transition-all duration-200 group",
+                  isActive
+                    ? "nav-active text-white"
+                    : "hover:bg-(--muted) text-(--muted-foreground) hover:text-(--foreground)"
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <item.icon size={20} />
-                  {item.label}
+                  <item.icon size={17} strokeWidth={isActive ? 2.5 : 2} />
+                  <span className="text-sm">{item.label}</span>
                 </div>
-                {item.href === '/notifications' && unreadCount > 0 && (
-                  <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", isActive ? 'bg-white text-(--primary)' : 'bg-rose-500 text-white')}>
-                    {unreadCount}
-                  </span>
-                )}
+                <div className="flex items-center gap-1">
+                  {item.href === '/notifications' && unreadCount > 0 && (
+                    <span className={cn(
+                      "text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center",
+                      isActive ? 'bg-white/30 text-white' : 'bg-red-500 text-white'
+                    )}>
+                      {unreadCount}
+                    </span>
+                  )}
+                  {!isActive && <ChevronRight size={12} className="opacity-0 group-hover:opacity-40 transition-opacity" />}
+                </div>
               </Link>
-            )
+            );
           })}
         </nav>
 
-        <div className="p-4 border-t border-(--border) space-y-2">
-           <Link href="/transactions/new" className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors">
-              <PlusCircle size={20} />
-              Add Expense
-           </Link>
-           <button 
-             onClick={() => { localStorage.clear(); router.push('/login'); }} 
-             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-(--muted-foreground) hover:bg-(--secondary) hover:text-(--foreground) transition-colors"
-           >
-              <LogOut size={20} />
-              Sign Out
-           </button>
+        {/* Bottom actions */}
+        <div className="divider mx-4 mb-3" />
+        <div className="px-3 pb-5 space-y-1">
+          {/* Theme toggle */}
+          <button
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-(--muted)"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            {theme === 'dark'
+              ? <><Sun size={17} /><span>Light Mode</span></>
+              : <><Moon size={17} /><span>Dark Mode</span></>
+            }
+          </button>
+
+          {/* Add Expense */}
+          <Link
+            href="/transactions/new"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+            style={{ color: 'var(--success)', background: 'rgba(16,185,129,0.08)' }}
+          >
+            <PlusCircle size={17} />
+            Add Expense
+          </Link>
+
+          {/* Sign Out */}
+          <button
+            onClick={() => { localStorage.clear(); router.push('/login'); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 hover:bg-red-500/10 hover:text-red-500"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            <LogOut size={17} />
+            Sign Out
+          </button>
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 md:pl-64 min-w-0 flex flex-col pt-safe">
-         {/* Mobile Header */}
-         <header className="md:hidden flex h-14 items-center justify-between px-4 sticky top-0 bg-(--background)/80 backdrop-blur-md z-40 border-b border-(--border)">
-            <div className="font-bold tracking-tight flex items-center gap-2">Aura Finance</div>
-            <Link href="/transactions/new" className="h-8 w-8 bg-(--primary) text-white rounded-full flex items-center justify-center shadow-md">
-              <PlusCircle size={18} />
-            </Link>
-         </header>
-         
-         <div className="flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full">
-           {children}
-         </div>
+      {/* ── Main Content ── */}
+      <main className="flex-1 md:pl-64 min-w-0 flex flex-col">
+        {/* Mobile top header */}
+        <header className="md:hidden sticky top-0 z-40 flex h-14 items-center justify-between px-4 glass-sidebar">
+          <div className="font-bold tracking-tight text-sm flex items-center gap-2">
+            <div
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold"
+              style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)' }}
+            >AF</div>
+            Aura Finance
+          </div>
+          <Link
+            href="/transactions/new"
+            className="h-8 w-8 rounded-full flex items-center justify-center text-white shadow-md"
+            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%)' }}
+          >
+            <PlusCircle size={16} />
+          </Link>
+        </header>
+
+        <div className="flex-1 p-4 pb-28 md:p-8 max-w-5xl mx-auto w-full">
+          {children}
+        </div>
       </main>
 
-      {/* Mobile Bottom Tab Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-(--card)/90 backdrop-blur-xl border-t border-(--border) flex items-center justify-around px-1 z-50 pb-safe shadow-[0_-10px_40px_rgba(0,0,0,0.05)] overflow-x-auto no-scrollbar">
+      {/* ── Mobile Bottom Tab Nav ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[calc(4rem+env(safe-area-inset-bottom))] pb-[env(safe-area-inset-bottom)] flex items-center justify-around px-2 z-50 glass-sidebar border-t border-(--border)">
         {navItems.map((item) => {
-          // Hide settings and heavy detail tabs on bottom nav to prevent extreme clutter on tiny screens
-          if (["Accounts", "Cards", "WhatsApp", "Exports", "Loans", "Vehicles"].includes(item.label)) return null; 
-
+          if (["Accounts", "Cards", "WhatsApp", "Exports", "Loans", "Vehicles"].includes(item.label)) return null;
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                "relative flex flex-col items-center justify-center w-full min-w-16 h-full gap-1 transition-colors",
-                isActive ? "text-(--primary)" : "text-(--muted-foreground)"
-              )}
+              className="relative flex flex-col items-center justify-center w-full h-full gap-0.5 transition-all duration-200"
+              style={{ color: isActive ? 'var(--primary)' : 'var(--muted-foreground)' }}
             >
-              <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
-              <span className="text-[9px] font-medium tracking-tight">{item.label}</span>
+              {isActive && (
+                <span
+                  className="absolute top-1.5 w-8 h-0.5 rounded-full"
+                  style={{ background: 'var(--primary)' }}
+                />
+              )}
+              <item.icon size={21} strokeWidth={isActive ? 2.5 : 1.8} />
+              <span className="text-[9px] font-semibold tracking-tight">{item.label}</span>
               {item.href === '/notifications' && unreadCount > 0 && (
-                <span className="absolute top-2 right-4 bg-rose-500 w-2 h-2 rounded-full border border-(--card)"></span>
+                <span className="absolute top-2 right-3 bg-red-500 w-2 h-2 rounded-full border-2 border-(--card)" />
               )}
             </Link>
-          )
+          );
         })}
       </nav>
     </div>

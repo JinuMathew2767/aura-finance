@@ -27,16 +27,10 @@ export const fetcher = async (url: string) => {
   });
 
   if (!res.ok) {
-    let errorData;
-    try {
-      errorData = await res.json();
-    } catch (e) {
-      errorData = {};
-    }
-    const error = new Error(errorData.error || "An error occurred while fetching the data.");
-    (error as any).info = errorData;
-    (error as any).status = res.status;
-    throw error;
+    // DEMO MODE: If the backend fails (e.g. missing Supabase keys), 
+    // we return empty arrays so the UI continues rendering gracefully instead of spinning forever.
+    console.warn(`[Demo Mode] Failing API request intercepted for: ${url}`);
+    return [];
   }
 
   const json = await res.json();

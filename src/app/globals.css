@@ -1,38 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ================================================
+   AURA FINANCE — Premium Design System V2
+   ================================================ */
+
 :root {
-  --background: #f2f2f7; /* iOS dark/light backgrounds */
-  --foreground: #1c1c1e;
-  
-  --card: #ffffff;
-  --card-foreground: #1c1c1e;
-  
-  --primary: #007aff; /* Apple Blue */
+  /* Backgrounds */
+  --background: #f0f2f8;
+  --background-2: #e8eaf2;
+  --foreground: #0f0f14;
+
+  /* Surfaces */
+  --card: 255, 255, 255;          /* Used as RGB triplet for rgba() */
+  --card-solid: #ffffff;
+  --card-foreground: #0f0f14;
+
+  /* Brand */
+  --primary: #4f6ef7;
+  --primary-rich: #3b5bef;
   --primary-foreground: #ffffff;
-  
-  --secondary: #e5e5ea;
-  --secondary-foreground: #1c1c1e;
+  --primary-rgb: 79, 110, 247;
 
-  --destructive: #ff3b30;
+  /* Accents */
+  --accent-purple: #8b5cf6;
+  --accent-teal: #14b8a6;
+  --accent-amber: #f59e0b;
+
+  /* State colors */
+  --secondary: rgba(79, 110, 247, 0.07);
+  --secondary-foreground: #0f0f14;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  
-  --success: #34c759;
+  --success: #10b981;
   --success-foreground: #ffffff;
+  --warning: #f59e0b;
 
-  --muted: #f2f2f7;
-  --muted-foreground: #8e8e93;
+  /* Muted */
+  --muted: rgba(79, 110, 247, 0.05);
+  --muted-foreground: #6b7280;
 
-  --border: #e5e5ea;
-  --input: #e5e5ea;
-  --ring: #007aff;
+  /* Borders */
+  --border: rgba(79, 110, 247, 0.12);
+  --border-solid: #dde2f0;
+  --input: #eef0f8;
+  --ring: #4f6ef7;
 
-  --radius: 0.75rem; /* Smoother apple radius */
+  /* Radius */
+  --radius: 1rem;
+
+  /* Sidebar */
+  --sidebar-bg: rgba(255,255,255,0.9);
+  --sidebar-border: rgba(79, 110, 247, 0.15);
 }
 
+.dark {
+  --background: #080b14;
+  --background-2: #0d1120;
+  --foreground: #f0f2ff;
+
+  --card: 15, 20, 40;
+  --card-solid: #0f1428;
+  --card-foreground: #f0f2ff;
+
+  --primary: #6b8aff;
+  --primary-rich: #4f6ef7;
+  --primary-foreground: #ffffff;
+  --primary-rgb: 107, 138, 255;
+
+  --secondary: rgba(107, 138, 255, 0.1);
+  --secondary-foreground: #f0f2ff;
+  --destructive: #f87171;
+  --destructive-foreground: #ffffff;
+  --success: #34d399;
+  --warning: #fbbf24;
+
+  --muted: rgba(107, 138, 255, 0.08);
+  --muted-foreground: #8892b0;
+
+  --border: rgba(107, 138, 255, 0.15);
+  --border-solid: #1e2640;
+  --input: #131929;
+  --ring: #6b8aff;
+
+  --sidebar-bg: rgba(8, 11, 20, 0.9);
+  --sidebar-border: rgba(107, 138, 255, 0.15);
+}
+
+/* ================================================
+   TAILWIND v4 THEME TOKENS
+   ================================================ */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
+  --color-card: var(--card-solid);
   --color-card-foreground: var(--card-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -44,59 +105,180 @@
   --color-success-foreground: var(--success-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
+  --color-border: var(--border-solid);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #f2f2f7;
-    
-    --card: #1c1c1e;
-    --card-foreground: #f2f2f7;
-    
-    --primary: #0a84ff;
-    --primary-foreground: #ffffff;
-    
-    --secondary: #2c2c2e;
-    --secondary-foreground: #f2f2f7;
+/* ================================================
+   BASE STYLES
+   ================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
 
-    --destructive: #ff453a;
-    --destructive-foreground: #ffffff;
-    
-    --success: #32d74b;
-    --success-foreground: #ffffff;
-
-    --muted: #1c1c1e;
-    --muted-foreground: #aeaeb2;
-
-    --border: #3a3a3c;
-    --input: #3a3a3c;
-    --ring: #0a84ff;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  min-height: 100vh;
+
+  /* Rich ambient gradient background */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -20%, rgba(var(--primary-rgb), 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 120%, rgba(var(--primary-rgb), 0.08) 0%, transparent 60%);
 }
 
-/* Glassmorphism helpers */
+/* ================================================
+   GLASSMORPHISM — Fixed correctly
+   ================================================ */
 .glass {
-  background: rgba(var(--card), 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: rgba(var(--card), 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
 }
-.glass-dark {
-  background: rgba(28, 28, 30, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+
+.glass-sidebar {
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border-right: 1px solid var(--sidebar-border);
 }
+
+.glass-card {
+  background: rgba(var(--card), 0.65);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(var(--primary-rgb), 0.1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.08),
+    0 10px 10px -5px rgba(0, 0, 0, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* ================================================
+   PREMIUM CARD GLOW VARIANTS
+   ================================================ */
+.card-glow-blue {
+  background: linear-gradient(135deg, rgba(79, 110, 247, 0.12) 0%, rgba(139, 92, 246, 0.06) 100%);
+  border: 1px solid rgba(79, 110, 247, 0.2);
+  box-shadow: 0 0 40px rgba(79, 110, 247, 0.08), 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.card-glow-green {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(20, 184, 166, 0.06) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 40px rgba(16, 185, 129, 0.08), 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.card-glow-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.06) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.06), 0 4px 20px rgba(0,0,0,0.06);
+}
+
+/* ================================================
+   PREMIUM BUTTON
+   ================================================ */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+  box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.35);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.45);
+  transform: translateY(-1px);
+}
+
+/* ================================================
+   NAVIGATION ACTIVE STATE
+   ================================================ */
+.nav-active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+  box-shadow: 0 4px 14px rgba(var(--primary-rgb), 0.3);
+  color: white;
+}
+
+/* ================================================
+   SCROLLBAR
+   ================================================ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(var(--primary-rgb), 0.2); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--primary-rgb), 0.4); }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ================================================
+   ANIMATIONS
+   ================================================ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(var(--primary-rgb), 0.2); }
+  50% { box-shadow: 0 0 30px rgba(var(--primary-rgb), 0.4); }
+}
+
+.animate-in { animation: fade-in 0.4s ease both; }
+.animate-slide-left { animation: slide-in-left 0.3s ease both; }
+
+/* Staggered children animations */
+.stagger-children > * { animation: fade-in 0.4s ease both; }
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 60ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 120ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 180ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+
+/* ================================================
+   GRADIENT TEXT
+   ================================================ */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ================================================
+   PREMIUM DIVIDER
+   ================================================ */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(var(--primary-rgb), 0.15), transparent);
+}
+
+/* Safe areas for mobile */
+.pt-safe { padding-top: env(safe-area-inset-top); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
