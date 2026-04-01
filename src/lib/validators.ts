@@ -11,6 +11,14 @@ export const FrequencySchema = z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']);
 export const NotificationTypeSchema = z.enum(['IN_APP', 'WHATSAPP', 'BOTH']);
 export const ExportTypeSchema = z.enum(['PDF', 'EXCEL', 'WORD']);
 
+const DateTimeInputSchema = z
+  .string()
+  .min(1)
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    message: 'Invalid date',
+  })
+  .transform((value) => new Date(value).toISOString());
+
 // ACCOUNTS
 export const CreateAccountSchema = z.object({
   name: z.string().min(1),
@@ -38,7 +46,7 @@ export const CreateTransactionSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional().nullable(),
   amount: z.number().min(0.01),
-  transaction_date: z.string().datetime(),
+  transaction_date: DateTimeInputSchema,
   category_id: z.string().uuid().optional().nullable(),
   subcategory_id: z.string().uuid().optional().nullable(),
   payment_method: PaymentMethodSchema.optional().nullable(),
