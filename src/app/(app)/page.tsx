@@ -2,7 +2,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/api-client";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -10,13 +10,17 @@ import { ArrowUpRight, ArrowDownRight, Wallet, CreditCard, PlusCircle, TrendingU
 
 export default function Dashboard() {
   const { data: accounts, error: aErr } = useSWR("/api/accounts", fetcher);
-  const { data: cards, error: cErr } = useSWR("/api/cards", fetcher);
-  const { data: transactions, error: tErr } = useSWR("/api/transactions?limit=5", fetcher);
+  const { data: cards } = useSWR("/api/cards", fetcher);
+  const { data: transactions } = useSWR("/api/transactions?limit=5", fetcher);
 
   const loading = !accounts || !cards || !transactions;
 
   if (loading && !aErr) return <div className="flex h-64 items-center justify-center"><Spinner /></div>;
 
+  const totalAvailableBalance = accounts?.reduce(
+    (acc: number, item: any) => acc + (Number(item.current_balance) || 0),
+    0
+  ) || 0;
   const totalOutstandings = cards?.filter((c: any) => c.type === 'CREDIT').reduce((acc: number, item: any) => acc + (Number(item.outstanding_balance) || 0), 0) || 0;
 
   return (
@@ -35,7 +39,27 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 stagger-children">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 stagger-children">
+        <div className="card-glow-teal rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div
+                className="h-9 w-9 rounded-lg flex items-center justify-center"
+                style={{ background: 'rgba(16,185,129,0.12)' }}
+              >
+                <Wallet size={18} style={{ color: 'var(--success)' }} />
+              </div>
+              <span className="text-sm font-semibold" style={{ color: 'var(--success)' }}>Available Balance</span>
+            </div>
+          </div>
+          <div className="text-3xl font-bold tracking-tight" style={{ color: 'var(--foreground)' }}>
+            {formatCurrency(totalAvailableBalance)}
+          </div>
+          <p className="text-xs mt-2" style={{ color: 'var(--muted-foreground)' }}>
+            Across {accounts?.length || 0} accounts
+          </p>
+        </div>
+
         {/* Outstanding Credit */}
         <div className="card-glow-red rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
