@@ -131,11 +131,53 @@ export const CreateLoanSchema = z.object({
   vehicle_id: nullableUuidSchema,
   name: z.string().min(1),
   total_amount: z.number().min(0),
+  total_profit_amount: z.preprocess(emptyToUndefined, z.number().min(0).optional().default(0)),
+  amount_paid_to_date: z.preprocess(emptyToUndefined, z.number().min(0).optional().default(0)),
+  principal_paid_to_date: z.preprocess(emptyToUndefined, z.number().min(0).optional().default(0)),
+  profit_paid_to_date: z.preprocess(emptyToUndefined, z.number().min(0).optional().default(0)),
   interest_rate: optionalNonNegativeNumberSchema,
   monthly_payment: z.number().min(0),
+  payment_account_id: nullableUuidSchema,
+  next_payment_date: nullableStringSchema,
+  auto_create_emi: z.boolean().optional().default(false),
   start_date: nullableStringSchema,
   end_date: nullableStringSchema,
   owner_type: OwnerTypeSchema,
+}).superRefine((value, ctx) => {
+  const totalRepayment = value.total_amount + (value.total_profit_amount ?? 0);
+  const splitPaid = (value.principal_paid_to_date ?? 0) + (value.profit_paid_to_date ?? 0);
+
+  if ((value.amount_paid_to_date ?? 0) > totalRepayment) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["amount_paid_to_date"],
+      message: "Paid to date cannot exceed finance amount plus total profit.",
+    });
+  }
+
+  if (splitPaid > (value.amount_paid_to_date ?? 0)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["principal_paid_to_date"],
+      message: "Principal paid plus profit paid cannot exceed the total amount paid.",
+    });
+  }
+
+  if (value.auto_create_emi && !value.payment_account_id) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["payment_account_id"],
+      message: "Select the account to deduct EMI from.",
+    });
+  }
+
+  if (value.auto_create_emi && !value.next_payment_date) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["next_payment_date"],
+      message: "Set the next EMI date for auto-posting.",
+    });
+  }
 });
 export const UpdateLoanSchema = CreateLoanSchema.partial();
 

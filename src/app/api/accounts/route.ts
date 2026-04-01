@@ -3,10 +3,16 @@ import { supabaseServerAdmin } from "@/lib/supabase";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { requireUserId } from "@/lib/auth-server";
 import { CreateAccountSchema } from "@/lib/validators";
+import { processDueLoanInstallments } from "@/lib/loan-automation";
 
 export async function GET(req: NextRequest) {
   try {
     const userId = requireUserId(req);
+    try {
+      await processDueLoanInstallments();
+    } catch (automationError) {
+      console.error("Loan EMI sync failed in /api/accounts", automationError);
+    }
     const { data, error } = await supabaseServerAdmin
       .from("accounts")
       .select("*")

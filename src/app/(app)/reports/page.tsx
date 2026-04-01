@@ -36,7 +36,11 @@ export default function Reports() {
 
   const creditCards = cards.filter((c: any) => c.type === 'CREDIT');
   const totalOutstandings = creditCards.reduce((acc: number, item: any) => acc + (Number(item.outstanding_balance) || 0), 0);
-  const totalLoanLiability = loans.reduce((acc: number, item: any) => acc + (Number(item.total_amount) || 0), 0);
+  const totalLoanLiability = loans.reduce(
+    (acc: number, item: any) =>
+      acc + Math.max((Number(item.total_amount) || 0) + (Number(item.total_profit_amount) || 0) - (Number(item.amount_paid_to_date) || 0), 0),
+    0
+  );
 
   return (
     <div className="space-y-8 animate-in pb-10">
@@ -136,7 +140,7 @@ export default function Reports() {
               <div className="flex justify-between items-center mb-2">
                 <div className="flex items-center gap-2">
                   <Landmark size={14} style={{ color: 'var(--muted-foreground)' }} />
-                  <span className="text-sm font-semibold" style={{ color: 'var(--muted-foreground)' }}>Original Loan Principal</span>
+                  <span className="text-sm font-semibold" style={{ color: 'var(--muted-foreground)' }}>Outstanding Loan Balance</span>
                 </div>
                 <span className="font-bold text-sm" style={{ color: 'var(--accent-purple)' }}>{formatCurrency(totalLoanLiability)}</span>
               </div>

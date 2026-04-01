@@ -2,10 +2,16 @@ import { NextRequest } from "next/server";
 import { supabaseServerAdmin } from "@/lib/supabase";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { requireUserId } from "@/lib/auth-server";
+import { processDueLoanInstallments } from "@/lib/loan-automation";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = requireUserId(req);
+    try {
+      await processDueLoanInstallments();
+    } catch (automationError) {
+      console.error("Loan EMI sync failed in /api/loans/[id]/payments", automationError);
+    }
     const { id } = await params;
     const { data, error } = await supabaseServerAdmin
       .from("loan_payments")
